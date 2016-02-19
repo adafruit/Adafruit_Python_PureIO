@@ -199,7 +199,7 @@ class SMBus(object):
         ])
         # Make ioctl call and return result data.
         ioctl(self._device.fileno(), I2C_RDWR, request)
-        return result.value
+        return bytearray(result.value)
 
     def write_quick(self, addr):
         """Write a single byte to the specified device."""
