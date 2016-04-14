@@ -92,7 +92,6 @@ class SMBus(object):
         /dev/i2c-1.  If bus is not specified then the open function should be
         called to open the bus.
         """
-        print('boopers')
         self._device = None
         if bus is not None:
             self.open(bus)
