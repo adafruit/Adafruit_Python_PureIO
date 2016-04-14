@@ -92,6 +92,7 @@ class SMBus(object):
         /dev/i2c-1.  If bus is not specified then the open function should be
         called to open the bus.
         """
+        print('boopers')
         self._device = None
         if bus is not None:
             self.open(bus)
@@ -184,22 +185,22 @@ class SMBus(object):
         # ioctl won't work.
         raise NotImplementedError()
 
-    def read_i2c_block_data(self, addr, cmd, len=32):
-        """Perform a read from the specified cmd register of device.  Len number
+    def read_i2c_block_data(self, addr, cmd, length=32):
+        """Perform a read from the specified cmd register of device.  Length number
         of bytes (default of 32) will be read and returned as a bytearray.
         """
         assert self._device is not None, 'Bus must be opened before operations are made against it!'
         # Build ctypes values to marshall between ioctl and Python.
         reg = c_uint8(cmd)
-        result = create_string_buffer(len)
+        result = create_string_buffer(length)
         # Build ioctl request.
         request = make_i2c_rdwr_data([
             (addr, 0, 1, pointer(reg)),             # Write cmd register.
-            (addr, I2C_M_RD, len, cast(pointer(result), POINTER(c_uint8)))   # Read data.
+            (addr, I2C_M_RD, length, cast(result, POINTER(c_uint8)))   # Read data.
         ])
         # Make ioctl call and return result data.
         ioctl(self._device.fileno(), I2C_RDWR, request)
-        return bytearray(result.value)
+        return bytearray(result.raw)  # Use .raw instead of .value which will stop at a null byte!
 
     def write_quick(self, addr):
         """Write a single byte to the specified device."""
