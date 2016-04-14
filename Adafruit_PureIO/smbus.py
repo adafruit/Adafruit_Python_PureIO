@@ -264,7 +264,6 @@ class SMBus(object):
         """Write a buffer of data to the specified cmd register of the device.
         """
         assert self._device is not None, 'Bus must be opened before operations are made against it!'
-        assert vals is not None and len(vals) > 0, 'Vals must be a buffer with data!'
         # Construct a string of data to send, including room for the command register.
         data = bytearray(len(vals)+1)
         data[0] = cmd & 0xFF  # Command register at the start.
