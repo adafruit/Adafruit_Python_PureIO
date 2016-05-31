@@ -86,13 +86,14 @@ class SMBus(object):
     pure Python calls to ioctl and direct /dev/i2c device access.
     """
 
-    def __init__(self, bus=None):
+    def __init__(self, bus=None, dangerous=False):
         """Create a new smbus instance.  Bus is an optional parameter that
         specifies the I2C bus number to use, for example 1 would use device
         /dev/i2c-1.  If bus is not specified then the open function should be
         called to open the bus.
         """
         self._device = None
+        self._dangerous = dangerous
         if bus is not None:
             self.open(bus)
 
@@ -132,7 +133,10 @@ class SMBus(object):
 
     def _select_device(self, addr):
         """Set the address of the device to communicate with on the I2C bus."""
-        ioctl(self._device.fileno(), I2C_SLAVE, addr & 0x7F)
+        if self._dangerous:
+            ioctl(self._device.fileno(), I2C_SLAVE_FORCE, addr & 0x7F)
+        else:
+            ioctl(self._device.fileno(), I2C_SLAVE, addr & 0x7F)
 
     def read_byte(self, addr):
         """Read a single byte from the specified device."""
