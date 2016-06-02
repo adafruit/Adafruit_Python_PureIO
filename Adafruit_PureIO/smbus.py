@@ -91,11 +91,13 @@ class SMBus(object):
         specifies the I2C bus number to use, for example 1 would use device
         /dev/i2c-1.  If bus is not specified then the open function should be
         called to open the bus.
+        When the dangerous flag is set to true, it forces access to devices
+        that are owned by the kernel.  This is ...  well ... dangerous.
         """
         self._device = None
         self._dangerous = dangerous
         if bus is not None:
-            self.open(bus)
+            self.open(bus, dangerous)
 
     def __del__(self):
         """Clean up any resources used by the SMBus instance."""
@@ -113,11 +115,14 @@ class SMBus(object):
         self.close()
         return False  # Don't suppress exceptions.
 
-    def open(self, bus):
-        """Open the smbus interface on the specified bus."""
+    def open(self, bus, dangerous=False):
+        """Open the smbus interface on the specified bus.
+        When the dangerous flag is set to true, it forces access to devices
+        that are owned by the kernel.  This is ...  well ... dangerous."""
         # Close the device if it's already open.
         if self._device is not None:
             self.close()
+        self._dangerous = dangerous
         # Try to open the file for the specified bus.  Must turn off buffering
         # or else Python 3 fails (see: https://bugs.python.org/issue20074)
         self._device = open('/dev/i2c-{0}'.format(bus), 'r+b', buffering=0)
