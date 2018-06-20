@@ -140,6 +140,12 @@ class SMBus(object):
         self._select_device(addr)
         return ord(self._device.read(1))
 
+    def read_bytes(self, addr, number):
+        """Read many byte from the specified device."""
+        assert self._device is not None, 'Bus must be opened before operations are made against it!'
+        self._select_device(addr)
+        return self._device.read(number)
+
     def read_byte_data(self, addr, cmd):
         """Read a single byte from the specified cmd register of the device."""
         assert self._device is not None, 'Bus must be opened before operations are made against it!'
