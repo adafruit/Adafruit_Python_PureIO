@@ -237,11 +237,11 @@ class SMBus(object):
         data[0] = val & 0xFF
         self._device.write(data)
 
-    def write_bytes(self, addr, buffer):
-        """Write many bytes to the specified device. buffer is a bytearray"""
+    def write_bytes(self, addr, buf):
+        """Write many bytes to the specified device. buf is a bytearray"""
         assert self._device is not None, 'Bus must be opened before operations are made against it!'
         self._select_device(addr)
-        self._device.write(buffer)
+        self._device.write(buf)
 
     def write_byte_data(self, addr, cmd, val):
         """Write a byte of data to the specified cmd register of the device.
