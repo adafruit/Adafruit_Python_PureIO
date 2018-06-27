@@ -18,11 +18,15 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-from ctypes import *
+"""I2C interface that mimics the Python SMBus API."""
+
+from ctypes import c_uint8, c_uint16, c_uint32, cast, pointer, POINTER
+from ctypes import create_string_buffer, Structure
 from fcntl import ioctl
 import struct
 
 # I2C C API constants (from linux kernel headers)
+# pylint: disable=bad-whitespace
 I2C_M_TEN             = 0x0010  # this is a ten bit chip address
 I2C_M_RD              = 0x0001  # read data, from slave to master
 I2C_M_STOP            = 0x8000  # if I2C_FUNC_PROTOCOL_MANGLING
@@ -40,23 +44,28 @@ I2C_FUNCS             = 0x0705  # Get the adapter functionality mask
 I2C_RDWR              = 0x0707  # Combined R/W transfer (one STOP only)
 I2C_PEC               = 0x0708  # != 0 to use PEC with SMBus
 I2C_SMBUS             = 0x0720  # SMBus transfer
+# pylint: enable=bad-whitespace
 
 
 # ctypes versions of I2C structs defined by kernel.
+# Tone down pylint for the Python classes that mirror C structs.
+#pylint: disable=invalid-name,too-few-public-methods
 class i2c_msg(Structure):
+    """Linux i2c_msg struct."""
     _fields_ = [
-        ('addr',  c_uint16),
+        ('addr', c_uint16),
         ('flags', c_uint16),
-        ('len',   c_uint16),
-        ('buf',   POINTER(c_uint8))
+        ('len', c_uint16),
+        ('buf', POINTER(c_uint8))
     ]
 
-class i2c_rdwr_ioctl_data(Structure):
+class i2c_rdwr_ioctl_data(Structure): #pylint: disable=invalid-name
+    """Linux i2c data struct."""
     _fields_ = [
-        ('msgs',  POINTER(i2c_msg)),
+        ('msgs', POINTER(i2c_msg)),
         ('nmsgs', c_uint32)
     ]
-
+#pylint: enable=invalid-name,too-few-public-methods
 
 def make_i2c_rdwr_data(messages):
     """Utility function to create and return an i2c_rdwr_ioctl_data structure
@@ -68,17 +77,16 @@ def make_i2c_rdwr_data(messages):
     # Create message array and populate with provided data.
     msg_data_type = i2c_msg*len(messages)
     msg_data = msg_data_type()
-    for i, m in enumerate(messages):
-        msg_data[i].addr  = m[0] & 0x7F
-        msg_data[i].flags = m[1]
-        msg_data[i].len   = m[2]
-        msg_data[i].buf   = m[3]
+    for i, message in enumerate(messages):
+        msg_data[i].addr = message[0] & 0x7F
+        msg_data[i].flags = message[1]
+        msg_data[i].len = message[2]
+        msg_data[i].buf = message[3]
     # Now build the data structure.
     data = i2c_rdwr_ioctl_data()
-    data.msgs  = msg_data
+    data.msgs = msg_data
     data.nmsgs = len(messages)
     return data
-
 
 # Create an interface that mimics the Python SMBus API.
 class SMBus(object):
@@ -229,11 +237,11 @@ class SMBus(object):
         data[0] = val & 0xFF
         self._device.write(data)
 
-    def write_bytes(self, addr, buffer):
-        """Write many bytes to the specified device. buffer is a bytearray"""
+    def write_bytes(self, addr, buf):
+        """Write many bytes to the specified device. buf is a bytearray"""
         assert self._device is not None, 'Bus must be opened before operations are made against it!'
         self._select_device(addr)
-        self._device.write(buffer)
+        self._device.write(buf)
 
     def write_byte_data(self, addr, cmd, val):
         """Write a byte of data to the specified cmd register of the device.
