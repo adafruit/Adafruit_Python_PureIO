@@ -18,7 +18,7 @@ classifiers = ['Development Status :: 4 - Beta',
                'Topic :: System :: Hardware']
 
 setup(name              = 'Adafruit_PureIO',
-      version           = '0.2.2',
+      version           = '0.2.3',
 	  url               = 'https://github.com/adafruit/Adafruit_Python_PureIO',
       author            = 'Tony DiCola / Adafruit Industries',
       author_email      = 'support@adafruit.com',
