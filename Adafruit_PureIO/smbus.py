@@ -210,17 +210,17 @@ class SMBus(object): # pylint: disable=useless-object-inheritance
             reg = cmd  # backup
             cmd = bytearray(1)
             cmd[0] = reg
-            
+
         cmdstring = create_string_buffer(len(cmd))
-        for i in range(len(cmd)):
-            cmdstring[i] = cmd[i]
+        for i, val in enumerate(cmd):
+            cmdstring[i] = val
 
         result = create_string_buffer(length)
-        
+
         # Build ioctl request.
         request = make_i2c_rdwr_data([
-            (addr, 0,        len(cmd), cast(cmdstring, POINTER(c_uint8))),             # Write cmd register.
-            (addr, I2C_M_RD, length,   cast(result, POINTER(c_uint8)))   # Read data.
+            (addr, 0, len(cmd), cast(cmdstring, POINTER(c_uint8))),    # Write cmd register.
+            (addr, I2C_M_RD, length, cast(result, POINTER(c_uint8)))   # Read data.
             ])
 
         # Make ioctl call and return result data.
