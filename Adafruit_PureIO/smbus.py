@@ -89,7 +89,7 @@ def make_i2c_rdwr_data(messages):
     return data
 
 # Create an interface that mimics the Python SMBus API.
-class SMBus(object): # pylint: disable=useless-object-inheritance
+class SMBus(object):
     """I2C interface that mimics the Python SMBus API but is implemented with
     pure Python calls to ioctl and direct /dev/i2c device access.
     """
@@ -204,13 +204,25 @@ class SMBus(object): # pylint: disable=useless-object-inheritance
         """
         assert self._device is not None, 'Bus must be opened before operations are made against it!'
         # Build ctypes values to marshall between ioctl and Python.
-        reg = c_uint8(cmd)
+
+        # convert register into bytearray
+        if not isinstance(cmd, (bytes, bytearray)):
+            reg = cmd  # backup
+            cmd = bytearray(1)
+            cmd[0] = reg
+
+        cmdstring = create_string_buffer(len(cmd))
+        for i, val in enumerate(cmd):
+            cmdstring[i] = val
+
         result = create_string_buffer(length)
+
         # Build ioctl request.
         request = make_i2c_rdwr_data([
-            (addr, 0, 1, pointer(reg)),             # Write cmd register.
+            (addr, 0, len(cmd), cast(cmdstring, POINTER(c_uint8))),    # Write cmd register.
             (addr, I2C_M_RD, length, cast(result, POINTER(c_uint8)))   # Read data.
-        ])
+            ])
+
         # Make ioctl call and return result data.
         ioctl(self._device.fileno(), I2C_RDWR, request)
         return bytearray(result.raw)  # Use .raw instead of .value which will stop at a null byte!
