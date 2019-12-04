@@ -29,7 +29,7 @@ setup(
     url='https://github.com/adafruit/Adafruit_Python_PureIO',
 
     # If your package is a single module, use this instead of 'packages':
-    packages=['adafruit_pureio'],
+    packages=['Adafruit_PureIO'],
 
     install_requires=[],
     license='MIT',
