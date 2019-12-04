@@ -1,28 +1,45 @@
-try:
-    # Try using ez_setup to install setuptools if not already installed.
-    from ez_setup import use_setuptools
-    use_setuptools()
-except ImportError:
-    # Ignore import error and assume Python 3 which already has setuptools.
-    pass
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# Note: To use the 'upload' functionality of this file, you must:
+#   $ pip install twine
+
+import io
+import os
 
 from setuptools import setup, find_packages
 
-classifiers = ['Development Status :: 4 - Beta',
-               'Operating System :: POSIX :: Linux',
-               'License :: OSI Approved :: MIT License',
-               'Intended Audience :: Developers',
-               'Programming Language :: Python :: 2.7',
-               'Programming Language :: Python :: 3',
-               'Topic :: Software Development',
-               'Topic :: System :: Hardware']
+here = os.path.abspath(os.path.dirname(__file__))
 
-setup(name              = 'Adafruit_PureIO',
-      version           = '1.0.1',
-      url               = 'https://github.com/adafruit/Adafruit_Python_PureIO',
-      author            = 'Tony DiCola / Adafruit Industries',
-      author_email      = 'support@adafruit.com',
-      description       = 'Pure python (i.e. no native extensions) access to Linux IO including I2C and SPI.  Drop in replacement for smbus and spidev modules.',
-      license           = 'MIT',
-      classifiers       = classifiers,
-      packages          = find_packages())
+# Import the README and use it as the long-description.
+# Note: this will only work if 'README.md' is present in your MANIFEST.in file!
+with io.open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
+    long_description = '\n' + f.read()
+
+setup(
+    name='Adafruit_PureIO',
+    use_scm_version=True,
+    setup_requires=["setuptools_scm"],
+    description='Pure python (i.e. no native extensions) access to Linux IO including I2C and SPI.  Drop in replacement for smbus and spidev modules.',
+    long_description=long_description,
+    long_description_content_type='text/x-rst',
+    author='Adafruit Industries',
+    author_email='circuitpython@adafruit.com',
+    python_requires='>=3.4.0',
+    url='https://github.com/adafruit/Adafruit_Python_PureIO',
+
+    # If your package is a single module, use this instead of 'packages':
+    packages=['adafruit_pureio'],
+
+    install_requires=[],
+    license='MIT',
+    classifiers=[
+        # Trove classifiers
+        # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: Implementation :: MicroPython',
+    ],
+)
