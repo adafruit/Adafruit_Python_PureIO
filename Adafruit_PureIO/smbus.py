@@ -89,7 +89,7 @@ def make_i2c_rdwr_data(messages):
     return data
 
 # Create an interface that mimics the Python SMBus API.
-class SMBus:
+class SMBus(Object):
     """I2C interface that mimics the Python SMBus API but is implemented with
     pure Python calls to ioctl and direct /dev/i2c device access.
     """
