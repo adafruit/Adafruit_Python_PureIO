@@ -18,12 +18,12 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-"""SPI interface that mimics the SpiDev API."""
+"""SPI interface that is similar to the SpiDev API."""
 
-from ctypes import c_uint8, c_uint16, c_uint32, cast, pointer, POINTER
-from ctypes import create_string_buffer, Structure, string_at, addressof
+from ctypes import create_string_buffer, string_at, addressof
 from fcntl import ioctl
 import struct
+import platform
 import os.path
 import array
 
@@ -41,6 +41,7 @@ SPI_TX_DUAL     = 0x100
 SPI_TX_QUAD     = 0x200
 SPI_RX_DUAL     = 0x400
 SPI_RX_QUAD     = 0x800
+# pylint: enable=bad-whitespace
 
 SPI_MODE_0 = 0
 SPI_MODE_1 = SPI_CPHA
@@ -48,7 +49,6 @@ SPI_MODE_2 = SPI_CPOL
 SPI_MODE_3 = SPI_CPHA | SPI_CPOL
 
 SPI_CHUNK_SIZE = 4096
-# pylint: enable=bad-whitespace
 
 def _ioc_encode(direction, number, structure):
     """
@@ -57,11 +57,16 @@ def _ioc_encode(direction, number, structure):
     command number, and argument structure in python's struct.pack format.
     Returns a tuple of the calculated op and the struct.pack format
     See Linux kernel source file /include/uapi/asm-generic/ioctl.h
+
+    ioc_sizebits should be 13 on PPC, MIPS, Sparc, and Alpha
     """
     ioc_magic = ord('k')
     ioc_nrbits = 8
     ioc_typebits = 8
-    ioc_sizebits = 14  # XXX: 13 on PPC, MIPS, Sparc, and Alpha
+    if platform.machine() == "mips":
+        ioc_sizebits = 13
+    else:
+        ioc_sizebits = 14
     ioc_nrshift = 0
     ioc_typeshift = ioc_nrshift + ioc_nrbits
     ioc_sizeshift = ioc_typeshift + ioc_typebits
@@ -69,24 +74,15 @@ def _ioc_encode(direction, number, structure):
 
     size = struct.calcsize(structure)
 
-    op = (direction << ioc_dirshift) | (ioc_magic << ioc_typeshift) | \
-         (number << ioc_nrshift) | (size << ioc_sizeshift)
+    operation = (direction << ioc_dirshift) | (ioc_magic << ioc_typeshift) | \
+                (number << ioc_nrshift) | (size << ioc_sizeshift)
 
-    return direction, op, structure
+    return direction, operation, structure
 
-class SPI(object):
+class SPI:
     """
-    struct spi_ioc_transfer {
-        __u64           tx_buf;
-        __u64           rx_buf;
-        __u32           len;
-        __u32           speed_hz;
-        __u16           delay_usecs;
-        __u8            bits_per_word;
-        __u8            cs_change;
-        __u8            tx_nbits;
-        __u8            rx_nbits;
-        __u16           pad;
+    This class is similar to SpiDev, but instead of opening and closing
+    for each call, it is set up on initialization making it fast.
     """
     _IOC_TRANSFER_FORMAT = "QQIIHBBBBH"
 
@@ -110,19 +106,12 @@ class SPI(object):
 
     _IOC_RD_MODE32 = _ioc_encode(_IOC_READ, 5, "I")
     _IOC_WR_MODE32 = _ioc_encode(_IOC_WRITE, 5, "I")
-
+# pylint: disable=too-many-arguments
     def __init__(self, device, max_speed_hz=None, bits_per_word=None, phase=None,
                  polarity=None, cs_high=None, lsb_first=None,
                  three_wire=None, loop=None, no_cs=None, ready=None):
-        """Create spidev interface object.
-
-        Args:
-            device: Tuple of (bus, device) or string of device path
-            max_speed_hz: Optional target bus speed in Hz.
-            bits_per_word: Optional number of bits per word.
-
-        Raises:
-            IOError: The spidev device could not be opened (check permissions)
+        """
+        Create spidev interface object.
         """
         if isinstance(device, tuple):
             (bus, dev) = device
@@ -162,50 +151,32 @@ class SPI(object):
 
         if self.ready is not None:
             self.ready = ready
+# pylint: enable=too-many-arguments
 
     def _ioctl(self, ioctl_data, data=None):
-        """ioctl helper function.
+        """
+        ioctl helper function.
 
         Performs an ioctl on self.handle. If the ioctl is an SPI read type
         ioctl, returns the result value.
-
-        Args:
-            ioctl_data: Tuple of (direction, op structure), where direction
-            is one of SPI._IOC_READ or SPI._IOC_WRITE, op is the
-            pre-computed ioctl op (see _ioc above) and structure is the
-            Python format string for the ioctl arguments.
-
-        Returns:
-            If ioctl_data specifies an SPI._IOC_READ, returns the result.
-            For SPI._IOC_WRITE types, returns None
         """
         (direction, ioctl_bytes, structure) = ioctl_data
         if direction == SPI._IOC_READ:
             arg = array.array(structure, [0])
             ioctl(self.handle, ioctl_bytes, arg, True)
             return arg[0]
-        else:
-            arg = struct.pack("=" + structure, data)
-            ioctl(self.handle, ioctl_bytes, arg)
-            return
+
+        arg = struct.pack("=" + structure, data)
+        ioctl(self.handle, ioctl_bytes, arg)
+        return None
 
     def _get_mode_field(self, field):
         """Helper function to get specific spidev mode bits
-
-        Args:
-            field: Bit mask to apply to spidev mode.
-
-        Returns:
-            bool(mode & field). True if specified bit is 1, otherwise False
         """
-        return True if self._ioctl(SPI._IOC_RD_MODE) & field else False
+        return bool(self._ioctl(SPI._IOC_RD_MODE) & field)
 
     def _set_mode_field(self, field, value):
         """Helper function to set a spidev mode bit
-
-        Args:
-            field: Bitmask of bit(s) to set to value
-            value: True to set bit(s) to 1, false to set bit(s) to 0
         """
         mode = self._ioctl(SPI._IOC_RD_MODE)
         if value:
@@ -217,9 +188,6 @@ class SPI(object):
     @property
     def phase(self):
         """SPI clock phase bit
-
-        False: Sample at leading edge of clock
-        True: Sample at trailing edge of clock
         """
         return self._get_mode_field(SPI_CPHA)
 
@@ -230,9 +198,6 @@ class SPI(object):
     @property
     def polarity(self):
         """SPI polarity bit
-
-        False: Data sampled at rising edge, data changes on falling edge
-        True: Data sampled at falling edge, data changes on rising edge
         """
         return self._get_mode_field(SPI_CPOL)
 
@@ -243,9 +208,6 @@ class SPI(object):
     @property
     def cs_high(self):
         """SPI chip select active level
-
-        True: Chip select is active high
-        False: Chip select is active low
         """
         return self._get_mode_field(SPI_CS_HIGH)
 
@@ -256,9 +218,6 @@ class SPI(object):
     @property
     def lsb_first(self):
         """Bit order of SPI word transfers
-
-        False: Send MSB first
-        True: Send LSB first
         """
         return self._get_mode_field(SPI_LSB_FIRST)
 
@@ -269,9 +228,6 @@ class SPI(object):
     @property
     def three_wire(self):
         """SPI 3-wire mode
-
-        True: Data is read and written on the same line (3-wire mode)
-        False: Data is read and written on separate lines (MOSI & MISO)
         """
         return self._get_mode_field(SPI_THREE_WIRE)
 
@@ -281,7 +237,8 @@ class SPI(object):
 
     @property
     def loop(self):
-        """SPI loopback mode"""
+        """SPI loopback mode
+        """
         return self._get_mode_field(SPI_LOOP)
 
     @loop.setter
@@ -290,7 +247,8 @@ class SPI(object):
 
     @property
     def no_cs(self):
-        """No chipselect. Single device on bus."""
+        """No chipselect. Single device on bus.
+        """
         return self._get_mode_field(SPI_NO_CS)
 
     @no_cs.setter
@@ -299,7 +257,8 @@ class SPI(object):
 
     @property
     def ready(self):
-        """Slave pulls low to pause"""
+        """Slave pulls low to pause
+        """
         return self._get_mode_field(SPI_READY)
 
     @ready.setter
@@ -333,6 +292,8 @@ class SPI(object):
 
     @property
     def mode(self):
+        """Mode that SPI is currently running in
+        """
         return self._ioctl(SPI._IOC_RD_MODE)
 
     @mode.setter
@@ -341,15 +302,6 @@ class SPI(object):
 
     def writebytes(self, data, max_speed_hz=0, bits_per_word=0, delay=0):
         """Perform half-duplex SPI write.
-
-        Args:
-            data: List of words to write
-            max_speed_hz: Optional temporary bitrate override in Hz. 0 (default)
-                uses existing spidev max_speed_hz setting.
-            bits_per_word: Optional temporary bits_per_word override. 0
-                (default) will use the current bits_per_word setting.
-            delay: Optional delay in usecs between sending the last bit and
-                deselecting the chip select line. 0 (default) for no delay.
         """
         data = array.array('B', data).tostring()
         #length = len(data)
@@ -361,22 +313,13 @@ class SPI(object):
                                            addressof(transmit_buffer), 0,
                                            length, max_speed_hz, delay,
                                            bits_per_word, 0, 0, 0, 0)
-            ioctl(self.handle, SPI._IOC_MESSAGE, spi_ioc_transfer)
+            try:
+                ioctl(self.handle, SPI._IOC_MESSAGE, spi_ioc_transfer)
+            except TimeoutError:
+                raise Exception("ioctl timeout. Please try a different SPI frequency or less data.")
 
     def readbytes(self, length, max_speed_hz=0, bits_per_word=0, delay=0):
         """Perform half-duplex SPI read as a binary string
-
-        Args:
-            length: Integer count of words to read
-            max_speed_hz: Optional temporary bitrate override in Hz. 0 (default)
-                uses existing spidev max_speed_hz setting.
-            bits_per_word: Optional temporary bits_per_word override. 0
-                (default) will use the current bits_per_word setting.
-            delay: Optional delay in usecs between sending the last bit and
-                deselecting the chip select line. 0 (default) for no delay.
-
-        Returns:
-            List of words read from device
         """
         receive_buffer = create_string_buffer(length)
         spi_ioc_transfer = struct.pack(SPI._IOC_TRANSFER_FORMAT, 0,
@@ -384,34 +327,24 @@ class SPI(object):
                                        length, max_speed_hz, delay, bits_per_word, 0,
                                        0, 0, 0)
         ioctl(self.handle, SPI._IOC_MESSAGE, spi_ioc_transfer)
-        return [ord(byte) for byte in string_at(receive_buffer, length)]
+        return string_at(receive_buffer, length)
 
     def transfer(self, data, max_speed_hz=0, bits_per_word=0, delay=0):
         """Perform full-duplex SPI transfer
-
-        Args:
-            data: List of words to transmit
-            max_speed_hz: Optional temporary bitrate override in Hz. 0 (default)
-                uses existing spidev max_speed_hz setting.
-            bits_per_word: Optional temporary bits_per_word override. 0
-                (default) will use the current bits_per_word setting.
-            delay: Optional delay in usecs between sending the last bit and
-                deselecting the chip select line. 0 (default) for no delay.
-
-        Returns:
-            List of words read from SPI bus during transfer
         """
         data = array.array('B', data).tostring()
-        length = len(data)
-        transmit_buffer = create_string_buffer(data)
-        receive_buffer = create_string_buffer(length)
-        spi_ioc_transfer = struct.pack(SPI._IOC_TRANSFER_FORMAT,
-                                       addressof(transmit_buffer),
-                                       addressof(receive_buffer),
-                                       length, max_speed_hz, delay, bits_per_word, 0,
-                                       0, 0, 0)
-        ioctl(self.handle, SPI._IOC_MESSAGE, spi_ioc_transfer)
-        return [byte for byte in string_at(receive_buffer, length)]
+        receive_data = []
 
-    def close(self):
-        pass
+        chunks = [data[i:i+SPI_CHUNK_SIZE] for i in range(0, len(data), SPI_CHUNK_SIZE)]
+        for chunk in chunks:
+            length = len(chunk)
+            receive_buffer = create_string_buffer(length)
+            transmit_buffer = create_string_buffer(chunk)
+            spi_ioc_transfer = struct.pack(SPI._IOC_TRANSFER_FORMAT,
+                                           addressof(transmit_buffer),
+                                           addressof(receive_buffer),
+                                           length, max_speed_hz, delay, bits_per_word, 0,
+                                           0, 0, 0)
+            ioctl(self.handle, SPI._IOC_MESSAGE, spi_ioc_transfer)
+            receive_data += string_at(receive_buffer, length)
+        return receive_data
