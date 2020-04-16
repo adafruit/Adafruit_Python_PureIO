@@ -28,7 +28,6 @@ import os.path
 import array
 
 # SPI C API constants (from linux kernel headers)
-# pylint: disable=bad-whitespace
 SPI_CPHA = 0x01
 SPI_CPOL = 0x02
 SPI_CS_HIGH = 0x04
@@ -41,7 +40,6 @@ SPI_TX_DUAL = 0x100
 SPI_TX_QUAD = 0x200
 SPI_RX_DUAL = 0x400
 SPI_RX_QUAD = 0x800
-# pylint: enable=bad-whitespace
 
 SPI_MODE_0 = 0
 SPI_MODE_1 = SPI_CPHA
@@ -57,9 +55,7 @@ def _ioc_encode(direction, number, structure):
     Calculates the appropriate spidev ioctl op argument given the direction,
     command number, and argument structure in python's struct.pack format.
     Returns a tuple of the calculated op and the struct.pack format
-    See Linux kernel source file /include/uapi/asm-generic/ioctl.h
-
-    ioc_sizebits should be 13 on PPC, MIPS, Sparc, and Alpha
+    See Linux kernel source file /include/uapi/asm/ioctl.h
     """
     ioc_magic = ord("k")
     ioc_nrbits = 8
@@ -68,6 +64,7 @@ def _ioc_encode(direction, number, structure):
         ioc_sizebits = 13
     else:
         ioc_sizebits = 14
+
     ioc_nrshift = 0
     ioc_typeshift = ioc_nrshift + ioc_nrbits
     ioc_sizeshift = ioc_typeshift + ioc_typebits
@@ -93,10 +90,16 @@ class SPI:
 
     _IOC_TRANSFER_FORMAT = "QQIIHBBBBH"
 
-    _IOC_WRITE = 1
-    _IOC_READ = 2
+    if platform.machine() == "mips":
+        # Direction is 3 bits
+        _IOC_READ = 2
+        _IOC_WRITE = 4
+    else:
+        # Direction is 2 bits
+        _IOC_WRITE = 1
+        _IOC_READ = 2
 
-    # _IOC_MESSAGE is a special case, so we ony need the ioctl number
+    # _IOC_MESSAGE is a special case, so we ony need the ioctl operation
     _IOC_MESSAGE = _ioc_encode(_IOC_WRITE, 0, _IOC_TRANSFER_FORMAT)[1]
 
     _IOC_RD_MODE = _ioc_encode(_IOC_READ, 1, "B")
@@ -114,6 +117,7 @@ class SPI:
     _IOC_RD_MODE32 = _ioc_encode(_IOC_READ, 5, "I")
     _IOC_WR_MODE32 = _ioc_encode(_IOC_WRITE, 5, "I")
     # pylint: disable=too-many-arguments
+
     def __init__(
         self,
         device,
@@ -161,13 +165,13 @@ class SPI:
         if three_wire is not None:
             self.three_wire = three_wire
 
-        if self.loop is not None:
+        if loop is not None:
             self.loop = loop
 
-        if self.no_cs is not None:
+        if no_cs is not None:
             self.no_cs = no_cs
 
-        if self.ready is not None:
+        if ready is not None:
             self.ready = ready
 
     # pylint: enable=too-many-arguments
