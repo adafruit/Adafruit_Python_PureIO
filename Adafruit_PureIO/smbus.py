@@ -24,7 +24,8 @@
 `Adafruit_PureIO.spi`
 ================================================================================
 
-Pure python (i.e. no native extensions) access to Linux IO I2C interface that mimics the Python SMBus API.
+Pure python (i.e. no native extensions) access to Linux IO I2C interface that mimics the
+Python SMBus API.
 
 * Author(s): Tony DiCola, Lady Ada, Melissa LeBlanc-Williams
 

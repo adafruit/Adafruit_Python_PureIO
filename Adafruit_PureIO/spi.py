@@ -24,7 +24,8 @@
 `Adafruit_PureIO.spi`
 ================================================================================
 
-Pure python (i.e. no native extensions) access to Linux IO SPI interface that is similar to the SpiDev API.
+Pure python (i.e. no native extensions) access to Linux IO SPI interface that is
+similar to the SpiDev API.
 
 * Author(s): Melissa LeBlanc-Williams
 
