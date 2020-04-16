@@ -1,5 +1,6 @@
-# Copyright (c) 2016 Adafruit Industries
-# Author: Tony DiCola
+# The MIT License (MIT)
+#
+# Copyright (c) 2016 Tony DiCola for Adafruit Industries
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +19,24 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-"""I2C interface that mimics the Python SMBus API."""
+
+"""
+`Adafruit_PureIO.spi`
+================================================================================
+
+Pure python (i.e. no native extensions) access to Linux IO I2C interface that mimics the
+Python SMBus API.
+
+* Author(s): Tony DiCola, Lady Ada, Melissa LeBlanc-Williams
+
+Implementation Notes
+--------------------
+
+**Software and Dependencies:**
+
+* Linux and Python 3.5 or Higher
+
+"""
 
 from ctypes import c_uint8, c_uint16, c_uint32, cast, pointer, POINTER
 from ctypes import create_string_buffer, Structure
@@ -26,46 +44,47 @@ from fcntl import ioctl
 import struct
 
 # I2C C API constants (from linux kernel headers)
-# pylint: disable=bad-whitespace
-I2C_M_TEN             = 0x0010  # this is a ten bit chip address
-I2C_M_RD              = 0x0001  # read data, from slave to master
-I2C_M_STOP            = 0x8000  # if I2C_FUNC_PROTOCOL_MANGLING
-I2C_M_NOSTART         = 0x4000  # if I2C_FUNC_NOSTART
-I2C_M_REV_DIR_ADDR    = 0x2000  # if I2C_FUNC_PROTOCOL_MANGLING
-I2C_M_IGNORE_NAK      = 0x1000  # if I2C_FUNC_PROTOCOL_MANGLING
-I2C_M_NO_RD_ACK       = 0x0800  # if I2C_FUNC_PROTOCOL_MANGLING
-I2C_M_RECV_LEN        = 0x0400  # length will be first received byte
+I2C_M_TEN = 0x0010  # this is a ten bit chip address
+I2C_M_RD = 0x0001  # read data, from slave to master
+I2C_M_STOP = 0x8000  # if I2C_FUNC_PROTOCOL_MANGLING
+I2C_M_NOSTART = 0x4000  # if I2C_FUNC_NOSTART
+I2C_M_REV_DIR_ADDR = 0x2000  # if I2C_FUNC_PROTOCOL_MANGLING
+I2C_M_IGNORE_NAK = 0x1000  # if I2C_FUNC_PROTOCOL_MANGLING
+I2C_M_NO_RD_ACK = 0x0800  # if I2C_FUNC_PROTOCOL_MANGLING
+I2C_M_RECV_LEN = 0x0400  # length will be first received byte
 
-I2C_SLAVE             = 0x0703  # Use this slave address
-I2C_SLAVE_FORCE       = 0x0706  # Use this slave address, even if
-                                # is already in use by a driver!
-I2C_TENBIT            = 0x0704  # 0 for 7 bit addrs, != 0 for 10 bit
-I2C_FUNCS             = 0x0705  # Get the adapter functionality mask
-I2C_RDWR              = 0x0707  # Combined R/W transfer (one STOP only)
-I2C_PEC               = 0x0708  # != 0 to use PEC with SMBus
-I2C_SMBUS             = 0x0720  # SMBus transfer
-# pylint: enable=bad-whitespace
+I2C_SLAVE = 0x0703  # Use this slave address
+I2C_SLAVE_FORCE = 0x0706  # Use this slave address, even if
+# is already in use by a driver!
+I2C_TENBIT = 0x0704  # 0 for 7 bit addrs, != 0 for 10 bit
+I2C_FUNCS = 0x0705  # Get the adapter functionality mask
+I2C_RDWR = 0x0707  # Combined R/W transfer (one STOP only)
+I2C_PEC = 0x0708  # != 0 to use PEC with SMBus
+I2C_SMBUS = 0x0720  # SMBus transfer
 
 
 # ctypes versions of I2C structs defined by kernel.
 # Tone down pylint for the Python classes that mirror C structs.
-#pylint: disable=invalid-name,too-few-public-methods
+# pylint: disable=invalid-name,too-few-public-methods
 class i2c_msg(Structure):
     """Linux i2c_msg struct."""
+
     _fields_ = [
-        ('addr', c_uint16),
-        ('flags', c_uint16),
-        ('len', c_uint16),
-        ('buf', POINTER(c_uint8))
+        ("addr", c_uint16),
+        ("flags", c_uint16),
+        ("len", c_uint16),
+        ("buf", POINTER(c_uint8)),
     ]
 
-class i2c_rdwr_ioctl_data(Structure): #pylint: disable=invalid-name
+
+class i2c_rdwr_ioctl_data(Structure):  # pylint: disable=invalid-name
     """Linux i2c data struct."""
-    _fields_ = [
-        ('msgs', POINTER(i2c_msg)),
-        ('nmsgs', c_uint32)
-    ]
-#pylint: enable=invalid-name,too-few-public-methods
+
+    _fields_ = [("msgs", POINTER(i2c_msg)), ("nmsgs", c_uint32)]
+
+
+# pylint: enable=invalid-name,too-few-public-methods
+
 
 def make_i2c_rdwr_data(messages):
     """Utility function to create and return an i2c_rdwr_ioctl_data structure
@@ -75,7 +94,7 @@ def make_i2c_rdwr_data(messages):
     flags value, buffer length, ctypes c_uint8 pointer to buffer.
     """
     # Create message array and populate with provided data.
-    msg_data_type = i2c_msg*len(messages)
+    msg_data_type = i2c_msg * len(messages)
     msg_data = msg_data_type()
     for i, message in enumerate(messages):
         msg_data[i].addr = message[0] & 0x7F
@@ -88,8 +107,9 @@ def make_i2c_rdwr_data(messages):
     data.nmsgs = len(messages)
     return data
 
+
 # Create an interface that mimics the Python SMBus API.
-class SMBus(object):
+class SMBus:
     """I2C interface that mimics the Python SMBus API but is implemented with
     pure Python calls to ioctl and direct /dev/i2c device access.
     """
@@ -127,7 +147,7 @@ class SMBus(object):
             self.close()
         # Try to open the file for the specified bus.  Must turn off buffering
         # or else Python 3 fails (see: https://bugs.python.org/issue20074)
-        self._device = open('/dev/i2c-{0}'.format(bus), 'r+b', buffering=0)
+        self._device = open("/dev/i2c-{0}".format(bus), "r+b", buffering=0)
         # TODO: Catch IOError and throw a better error message that describes
         # what's wrong (i.e. I2C may not be enabled or the bus doesn't exist).
 
@@ -144,27 +164,35 @@ class SMBus(object):
 
     def read_byte(self, addr):
         """Read a single byte from the specified device."""
-        assert self._device is not None, 'Bus must be opened before operations are made against it!'
+        assert (
+            self._device is not None
+        ), "Bus must be opened before operations are made against it!"
         self._select_device(addr)
         return ord(self._device.read(1))
 
     def read_bytes(self, addr, number):
         """Read many bytes from the specified device."""
-        assert self._device is not None, 'Bus must be opened before operations are made against it!'
+        assert (
+            self._device is not None
+        ), "Bus must be opened before operations are made against it!"
         self._select_device(addr)
         return self._device.read(number)
 
     def read_byte_data(self, addr, cmd):
         """Read a single byte from the specified cmd register of the device."""
-        assert self._device is not None, 'Bus must be opened before operations are made against it!'
+        assert (
+            self._device is not None
+        ), "Bus must be opened before operations are made against it!"
         # Build ctypes values to marshall between ioctl and Python.
         reg = c_uint8(cmd)
         result = c_uint8()
         # Build ioctl request.
-        request = make_i2c_rdwr_data([
-            (addr, 0, 1, pointer(reg)),             # Write cmd register.
-            (addr, I2C_M_RD, 1, pointer(result))    # Read 1 byte as result.
-        ])
+        request = make_i2c_rdwr_data(
+            [
+                (addr, 0, 1, pointer(reg)),  # Write cmd register.
+                (addr, I2C_M_RD, 1, pointer(result)),  # Read 1 byte as result.
+            ]
+        )
         # Make ioctl call and return result data.
         ioctl(self._device.fileno(), I2C_RDWR, request)
         return result.value
@@ -174,15 +202,24 @@ class SMBus(object):
         Note that this will interpret data using the endianness of the processor
         running Python (typically little endian)!
         """
-        assert self._device is not None, 'Bus must be opened before operations are made against it!'
+        assert (
+            self._device is not None
+        ), "Bus must be opened before operations are made against it!"
         # Build ctypes values to marshall between ioctl and Python.
         reg = c_uint8(cmd)
         result = c_uint16()
         # Build ioctl request.
-        request = make_i2c_rdwr_data([
-            (addr, 0, 1, pointer(reg)),             # Write cmd register.
-            (addr, I2C_M_RD, 2, cast(pointer(result), POINTER(c_uint8)))   # Read word (2 bytes).
-        ])
+        request = make_i2c_rdwr_data(
+            [
+                (addr, 0, 1, pointer(reg)),  # Write cmd register.
+                (
+                    addr,
+                    I2C_M_RD,
+                    2,
+                    cast(pointer(result), POINTER(c_uint8)),
+                ),  # Read word (2 bytes).
+            ]
+        )
         # Make ioctl call and return result data.
         ioctl(self._device.fileno(), I2C_RDWR, request)
         return result.value
@@ -202,7 +239,9 @@ class SMBus(object):
         """Perform a read from the specified cmd register of device.  Length number
         of bytes (default of 32) will be read and returned as a bytearray.
         """
-        assert self._device is not None, 'Bus must be opened before operations are made against it!'
+        assert (
+            self._device is not None
+        ), "Bus must be opened before operations are made against it!"
         # Build ctypes values to marshall between ioctl and Python.
 
         # convert register into bytearray
@@ -218,14 +257,23 @@ class SMBus(object):
         result = create_string_buffer(length)
 
         # Build ioctl request.
-        request = make_i2c_rdwr_data([
-            (addr, 0, len(cmd), cast(cmdstring, POINTER(c_uint8))),    # Write cmd register.
-            (addr, I2C_M_RD, length, cast(result, POINTER(c_uint8)))   # Read data.
-            ])
+        request = make_i2c_rdwr_data(
+            [
+                (
+                    addr,
+                    0,
+                    len(cmd),
+                    cast(cmdstring, POINTER(c_uint8)),
+                ),  # Write cmd register.
+                (addr, I2C_M_RD, length, cast(result, POINTER(c_uint8))),  # Read data.
+            ]
+        )
 
         # Make ioctl call and return result data.
         ioctl(self._device.fileno(), I2C_RDWR, request)
-        return bytearray(result.raw)  # Use .raw instead of .value which will stop at a null byte!
+        return bytearray(
+            result.raw
+        )  # Use .raw instead of .value which will stop at a null byte!
 
     def write_quick(self, addr):
         """Write a single byte to the specified device."""
@@ -233,17 +281,19 @@ class SMBus(object):
         # just write a single byte that initiates a write to the specified device
         # address (but writes no data!).  The functionality is duplicated below
         # but the actual use case for this is unknown.
-        assert self._device is not None, 'Bus must be opened before operations are made against it!'
+        assert (
+            self._device is not None
+        ), "Bus must be opened before operations are made against it!"
         # Build ioctl request.
-        request = make_i2c_rdwr_data([
-            (addr, 0, 0, None),  # Write with no data.
-        ])
+        request = make_i2c_rdwr_data([(addr, 0, 0, None),])  # Write with no data.
         # Make ioctl call and return result data.
         ioctl(self._device.fileno(), I2C_RDWR, request)
 
     def write_byte(self, addr, val):
         """Write a single byte to the specified device."""
-        assert self._device is not None, 'Bus must be opened before operations are made against it!'
+        assert (
+            self._device is not None
+        ), "Bus must be opened before operations are made against it!"
         self._select_device(addr)
         data = bytearray(1)
         data[0] = val & 0xFF
@@ -251,14 +301,18 @@ class SMBus(object):
 
     def write_bytes(self, addr, buf):
         """Write many bytes to the specified device. buf is a bytearray"""
-        assert self._device is not None, 'Bus must be opened before operations are made against it!'
+        assert (
+            self._device is not None
+        ), "Bus must be opened before operations are made against it!"
         self._select_device(addr)
         self._device.write(buf)
 
     def write_byte_data(self, addr, cmd, val):
         """Write a byte of data to the specified cmd register of the device.
         """
-        assert self._device is not None, 'Bus must be opened before operations are made against it!'
+        assert (
+            self._device is not None
+        ), "Bus must be opened before operations are made against it!"
         # Construct a string of data to send with the command register and byte value.
         data = bytearray(2)
         data[0] = cmd & 0xFF
@@ -272,9 +326,11 @@ class SMBus(object):
         device.  Note that this will write the data in the endianness of the
         processor running Python (typically little endian)!
         """
-        assert self._device is not None, 'Bus must be opened before operations are made against it!'
+        assert (
+            self._device is not None
+        ), "Bus must be opened before operations are made against it!"
         # Construct a string of data to send with the command register and word value.
-        data = struct.pack('=BH', cmd & 0xFF, val & 0xFFFF)
+        data = struct.pack("=BH", cmd & 0xFF, val & 0xFFFF)
         # Send the data to the device.
         self._select_device(addr)
         self._device.write(data)
@@ -287,7 +343,7 @@ class SMBus(object):
         """
         # Just use the I2C block data write to write the provided values and
         # their length as the first byte.
-        data = bytearray(len(vals)+1)
+        data = bytearray(len(vals) + 1)
         data[0] = len(vals) & 0xFF
         data[1:] = vals[0:]
         self.write_i2c_block_data(addr, cmd, data)
@@ -295,12 +351,14 @@ class SMBus(object):
     def write_i2c_block_data(self, addr, cmd, vals):
         """Write a buffer of data to the specified cmd register of the device.
         """
-        assert self._device is not None, 'Bus must be opened before operations are made against it!'
+        assert (
+            self._device is not None
+        ), "Bus must be opened before operations are made against it!"
         # Construct a string of data to send, including room for the command register.
-        data = bytearray(len(vals)+1)
+        data = bytearray(len(vals) + 1)
         data[0] = cmd & 0xFF  # Command register at the start.
-        data[1:] = vals[0:]   # Copy in the block data (ugly but necessary to ensure
-                              # the entire write happens in one transaction).
+        data[1:] = vals[0:]  # Copy in the block data (ugly but necessary to ensure
+        # the entire write happens in one transaction).
         # Send the data to the device.
         self._select_device(addr)
         self._device.write(data)
@@ -310,15 +368,24 @@ class SMBus(object):
         the specified register of the device, and then reading a word of response
         data (which is returned).
         """
-        assert self._device is not None, 'Bus must be opened before operations are made against it!'
+        assert (
+            self._device is not None
+        ), "Bus must be opened before operations are made against it!"
         # Build ctypes values to marshall between ioctl and Python.
-        data = create_string_buffer(struct.pack('=BH', cmd, val))
+        data = create_string_buffer(struct.pack("=BH", cmd, val))
         result = c_uint16()
         # Build ioctl request.
-        request = make_i2c_rdwr_data([
-            (addr, 0, 3, cast(pointer(data), POINTER(c_uint8))),          # Write data.
-            (addr, I2C_M_RD, 2, cast(pointer(result), POINTER(c_uint8)))  # Read word (2 bytes).
-        ])
+        request = make_i2c_rdwr_data(
+            [
+                (addr, 0, 3, cast(pointer(data), POINTER(c_uint8))),  # Write data.
+                (
+                    addr,
+                    I2C_M_RD,
+                    2,
+                    cast(pointer(result), POINTER(c_uint8)),
+                ),  # Read word (2 bytes).
+            ]
+        )
         # Make ioctl call and return result data.
         ioctl(self._device.fileno(), I2C_RDWR, request)
         # Note the python-smbus code appears to have a rather serious bug and

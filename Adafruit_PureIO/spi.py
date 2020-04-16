@@ -1,5 +1,6 @@
-# Copyright (c) 2020 Adafruit Industries
-# Author: Melissa LeBlanc-Williams
+# The MIT License (MIT)
+#
+# Copyright (c) 2020 Melissa LeBlanc-Williams for Adafruit Industries
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,8 +19,26 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-"""SPI interface that is similar to the SpiDev API."""
 
+"""
+`Adafruit_PureIO.spi`
+================================================================================
+
+Pure python (i.e. no native extensions) access to Linux IO SPI interface that is
+similar to the SpiDev API.
+
+* Author(s): Melissa LeBlanc-Williams
+
+Implementation Notes
+--------------------
+
+**Software and Dependencies:**
+
+* Linux and Python 3.5 or Higher
+
+"""
+
+# imports
 from ctypes import create_string_buffer, string_at, addressof
 from fcntl import ioctl
 import struct
@@ -27,21 +46,22 @@ import platform
 import os.path
 import array
 
+__version__ = "0.0.0-auto.0"
+__repo__ = "https://github.com/adafruit/Adafruit_Python_PureIO.git"
+
 # SPI C API constants (from linux kernel headers)
-# pylint: disable=bad-whitespace
-SPI_CPHA        = 0x01
-SPI_CPOL        = 0x02
-SPI_CS_HIGH     = 0x04
-SPI_LSB_FIRST   = 0x08
-SPI_THREE_WIRE  = 0x10
-SPI_LOOP        = 0x20
-SPI_NO_CS       = 0x40
-SPI_READY       = 0x80
-SPI_TX_DUAL     = 0x100
-SPI_TX_QUAD     = 0x200
-SPI_RX_DUAL     = 0x400
-SPI_RX_QUAD     = 0x800
-# pylint: enable=bad-whitespace
+SPI_CPHA = 0x01
+SPI_CPOL = 0x02
+SPI_CS_HIGH = 0x04
+SPI_LSB_FIRST = 0x08
+SPI_THREE_WIRE = 0x10
+SPI_LOOP = 0x20
+SPI_NO_CS = 0x40
+SPI_READY = 0x80
+SPI_TX_DUAL = 0x100
+SPI_TX_QUAD = 0x200
+SPI_RX_DUAL = 0x400
+SPI_RX_QUAD = 0x800
 
 SPI_MODE_0 = 0
 SPI_MODE_1 = SPI_CPHA
@@ -50,23 +70,23 @@ SPI_MODE_3 = SPI_CPHA | SPI_CPOL
 
 SPI_CHUNK_SIZE = 4096
 
+
 def _ioc_encode(direction, number, structure):
     """
     ioctl command encoding helper function
     Calculates the appropriate spidev ioctl op argument given the direction,
     command number, and argument structure in python's struct.pack format.
     Returns a tuple of the calculated op and the struct.pack format
-    See Linux kernel source file /include/uapi/asm-generic/ioctl.h
-
-    ioc_sizebits should be 13 on PPC, MIPS, Sparc, and Alpha
+    See Linux kernel source file /include/uapi/asm/ioctl.h
     """
-    ioc_magic = ord('k')
+    ioc_magic = ord("k")
     ioc_nrbits = 8
     ioc_typebits = 8
     if platform.machine() == "mips":
         ioc_sizebits = 13
     else:
         ioc_sizebits = 14
+
     ioc_nrshift = 0
     ioc_typeshift = ioc_nrshift + ioc_nrbits
     ioc_sizeshift = ioc_typeshift + ioc_typebits
@@ -74,22 +94,34 @@ def _ioc_encode(direction, number, structure):
 
     size = struct.calcsize(structure)
 
-    operation = (direction << ioc_dirshift) | (ioc_magic << ioc_typeshift) | \
-                (number << ioc_nrshift) | (size << ioc_sizeshift)
+    operation = (
+        (direction << ioc_dirshift)
+        | (ioc_magic << ioc_typeshift)
+        | (number << ioc_nrshift)
+        | (size << ioc_sizeshift)
+    )
 
     return direction, operation, structure
+
 
 class SPI:
     """
     This class is similar to SpiDev, but instead of opening and closing
     for each call, it is set up on initialization making it fast.
     """
+
     _IOC_TRANSFER_FORMAT = "QQIIHBBBBH"
 
-    _IOC_WRITE = 1
-    _IOC_READ = 2
+    if platform.machine() == "mips":
+        # Direction is 3 bits
+        _IOC_READ = 2
+        _IOC_WRITE = 4
+    else:
+        # Direction is 2 bits
+        _IOC_WRITE = 1
+        _IOC_READ = 2
 
-    # _IOC_MESSAGE is a special case, so we ony need the ioctl number
+    # _IOC_MESSAGE is a special case, so we ony need the ioctl operation
     _IOC_MESSAGE = _ioc_encode(_IOC_WRITE, 0, _IOC_TRANSFER_FORMAT)[1]
 
     _IOC_RD_MODE = _ioc_encode(_IOC_READ, 1, "B")
@@ -106,10 +138,22 @@ class SPI:
 
     _IOC_RD_MODE32 = _ioc_encode(_IOC_READ, 5, "I")
     _IOC_WR_MODE32 = _ioc_encode(_IOC_WRITE, 5, "I")
-# pylint: disable=too-many-arguments
-    def __init__(self, device, max_speed_hz=None, bits_per_word=None, phase=None,
-                 polarity=None, cs_high=None, lsb_first=None,
-                 three_wire=None, loop=None, no_cs=None, ready=None):
+    # pylint: disable=too-many-arguments
+
+    def __init__(
+        self,
+        device,
+        max_speed_hz=None,
+        bits_per_word=None,
+        phase=None,
+        polarity=None,
+        cs_high=None,
+        lsb_first=None,
+        three_wire=None,
+        loop=None,
+        no_cs=None,
+        ready=None,
+    ):
         """
         Create spidev interface object.
         """
@@ -143,15 +187,16 @@ class SPI:
         if three_wire is not None:
             self.three_wire = three_wire
 
-        if self.loop is not None:
+        if loop is not None:
             self.loop = loop
 
-        if self.no_cs is not None:
+        if no_cs is not None:
             self.no_cs = no_cs
 
-        if self.ready is not None:
+        if ready is not None:
             self.ready = ready
-# pylint: enable=too-many-arguments
+
+    # pylint: enable=too-many-arguments
 
     def _ioctl(self, ioctl_data, data=None):
         """
@@ -303,48 +348,80 @@ class SPI:
     def writebytes(self, data, max_speed_hz=0, bits_per_word=0, delay=0):
         """Perform half-duplex SPI write.
         """
-        data = array.array('B', data).tostring()
-        #length = len(data)
-        chunks = [data[i:i+SPI_CHUNK_SIZE] for i in range(0, len(data), SPI_CHUNK_SIZE)]
+        data = array.array("B", data).tostring()
+        # length = len(data)
+        chunks = [
+            data[i : i + SPI_CHUNK_SIZE] for i in range(0, len(data), SPI_CHUNK_SIZE)
+        ]
         for chunk in chunks:
             length = len(chunk)
             transmit_buffer = create_string_buffer(chunk)
-            spi_ioc_transfer = struct.pack(SPI._IOC_TRANSFER_FORMAT,
-                                           addressof(transmit_buffer), 0,
-                                           length, max_speed_hz, delay,
-                                           bits_per_word, 0, 0, 0, 0)
+            spi_ioc_transfer = struct.pack(
+                SPI._IOC_TRANSFER_FORMAT,
+                addressof(transmit_buffer),
+                0,
+                length,
+                max_speed_hz,
+                delay,
+                bits_per_word,
+                0,
+                0,
+                0,
+                0,
+            )
             try:
                 ioctl(self.handle, SPI._IOC_MESSAGE, spi_ioc_transfer)
             except TimeoutError:
-                raise Exception("ioctl timeout. Please try a different SPI frequency or less data.")
+                raise Exception(
+                    "ioctl timeout. Please try a different SPI frequency or less data."
+                )
 
     def readbytes(self, length, max_speed_hz=0, bits_per_word=0, delay=0):
         """Perform half-duplex SPI read as a binary string
         """
         receive_buffer = create_string_buffer(length)
-        spi_ioc_transfer = struct.pack(SPI._IOC_TRANSFER_FORMAT, 0,
-                                       addressof(receive_buffer),
-                                       length, max_speed_hz, delay, bits_per_word, 0,
-                                       0, 0, 0)
+        spi_ioc_transfer = struct.pack(
+            SPI._IOC_TRANSFER_FORMAT,
+            0,
+            addressof(receive_buffer),
+            length,
+            max_speed_hz,
+            delay,
+            bits_per_word,
+            0,
+            0,
+            0,
+            0,
+        )
         ioctl(self.handle, SPI._IOC_MESSAGE, spi_ioc_transfer)
         return string_at(receive_buffer, length)
 
     def transfer(self, data, max_speed_hz=0, bits_per_word=0, delay=0):
         """Perform full-duplex SPI transfer
         """
-        data = array.array('B', data).tostring()
+        data = array.array("B", data).tostring()
         receive_data = []
 
-        chunks = [data[i:i+SPI_CHUNK_SIZE] for i in range(0, len(data), SPI_CHUNK_SIZE)]
+        chunks = [
+            data[i : i + SPI_CHUNK_SIZE] for i in range(0, len(data), SPI_CHUNK_SIZE)
+        ]
         for chunk in chunks:
             length = len(chunk)
             receive_buffer = create_string_buffer(length)
             transmit_buffer = create_string_buffer(chunk)
-            spi_ioc_transfer = struct.pack(SPI._IOC_TRANSFER_FORMAT,
-                                           addressof(transmit_buffer),
-                                           addressof(receive_buffer),
-                                           length, max_speed_hz, delay, bits_per_word, 0,
-                                           0, 0, 0)
+            spi_ioc_transfer = struct.pack(
+                SPI._IOC_TRANSFER_FORMAT,
+                addressof(transmit_buffer),
+                addressof(receive_buffer),
+                length,
+                max_speed_hz,
+                delay,
+                bits_per_word,
+                0,
+                0,
+                0,
+                0,
+            )
             ioctl(self.handle, SPI._IOC_MESSAGE, spi_ioc_transfer)
             receive_data += string_at(receive_buffer, length)
         return receive_data
