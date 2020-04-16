@@ -48,7 +48,7 @@ jobs:
         black --check --target-version=py35 .
     - name: PyLint
       run: |
-        pylint $( find . -path './adafruit*.py' )
+        pylint $( find . -path './Adafruit*/*.py' )
         ([[ ! -d "examples" ]] || pylint --disable=missing-docstring,invalid-name,bad-whitespace $( find . -path "./examples/*.py" ))
     - name: Build assets
       run: circuitpython-build-bundles --filename_prefix ${{ steps.repo-name.outputs.repo-name }} --library_location .
