@@ -12,12 +12,7 @@ jobs:
       run: echo "$GITHUB_CONTEXT"
     - name: Translate Repo Name For Build Tools filename_prefix
       id: repo-name
-      run: |
-        echo ::set-output name=repo-name::$(
-        echo ${{ github.repository }} |
-        awk -F '\/' '{ print tolower($2) }' |
-        tr '_' '-'
-        )
+      run: echo ::set-output name=Adafruit_Python_PureIO
     - name: Set up Python 3.6
       uses: actions/setup-python@v1
       with:
