@@ -1,5 +1,6 @@
-# Copyright (c) 2016 Adafruit Industries
-# Author: Tony DiCola
+# The MIT License (MIT)
+#
+# Copyright (c) 2016 Tony DiCola for Adafruit Industries
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +19,23 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-"""I2C interface that mimics the Python SMBus API."""
+
+"""
+`Adafruit_PureIO.spi`
+================================================================================
+
+Pure python (i.e. no native extensions) access to Linux IO I2C interface that mimics the Python SMBus API.
+
+* Author(s): Tony DiCola, Lady Ada, Melissa LeBlanc-Williams
+
+Implementation Notes
+--------------------
+
+**Software and Dependencies:**
+
+* Linux and Python 3.5 or Higher
+
+"""
 
 from ctypes import c_uint8, c_uint16, c_uint32, cast, pointer, POINTER
 from ctypes import create_string_buffer, Structure

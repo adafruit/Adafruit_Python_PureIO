@@ -1,5 +1,6 @@
-# Copyright (c) 2020 Adafruit Industries
-# Author: Melissa LeBlanc-Williams
+# The MIT License (MIT)
+#
+# Copyright (c) 2020 Melissa LeBlanc-Williams for Adafruit Industries
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,14 +19,34 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-"""SPI interface that is similar to the SpiDev API."""
 
+"""
+`Adafruit_PureIO.spi`
+================================================================================
+
+Pure python (i.e. no native extensions) access to Linux IO SPI interface that is similar to the SpiDev API.
+
+* Author(s): Melissa LeBlanc-Williams
+
+Implementation Notes
+--------------------
+
+**Software and Dependencies:**
+
+* Linux and Python 3.5 or Higher
+
+"""
+
+# imports
 from ctypes import create_string_buffer, string_at, addressof
 from fcntl import ioctl
 import struct
 import platform
 import os.path
 import array
+
+__version__ = "0.0.0-auto.0"
+__repo__ = "https://github.com/adafruit/Adafruit_Python_PureIO.git"
 
 # SPI C API constants (from linux kernel headers)
 SPI_CPHA = 0x01
