@@ -1,8 +1,8 @@
 Introduction
 ============
 
-.. image:: https://readthedocs.org/projects/Adafruit-PureIO/badge/?version=latest
-    :target: https://circuitpython.readthedocs.io/projects/pureio/en/latest/
+.. image:: https://readthedocs.org/projects/adafruit-pureio/badge/?version=latest
+    :target: https://adafruit-pureio.readthedocs.io/en/latest/
     :alt: Documentation Status
 
 .. image:: https://img.shields.io/discord/327254708534116352.svg

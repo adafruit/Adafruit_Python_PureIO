@@ -21,7 +21,7 @@
 # THE SOFTWARE.
 
 """
-`Adafruit_PureIO.spi`
+`Adafruit_PureIO.smbus`
 ================================================================================
 
 Pure python (i.e. no native extensions) access to Linux IO I2C interface that mimics the
