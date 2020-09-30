@@ -44,6 +44,7 @@ from fcntl import ioctl
 import struct
 import platform
 import os.path
+from os import environ
 import array
 
 __version__ = "0.0.0-auto.0"
@@ -68,7 +69,7 @@ SPI_MODE_1 = SPI_CPHA
 SPI_MODE_2 = SPI_CPOL
 SPI_MODE_3 = SPI_CPHA | SPI_CPOL
 
-SPI_CHUNK_SIZE = 4096
+SPI_DEFAULT_CHUNK_SIZE = 4096
 
 
 def _ioc_encode(direction, number, structure):
@@ -104,6 +105,7 @@ def _ioc_encode(direction, number, structure):
     return direction, operation, structure
 
 
+# pylint: disable=too-many-instance-attributes, too-many-branches
 class SPI:
     """
     This class is similar to SpiDev, but instead of opening and closing
@@ -165,6 +167,13 @@ class SPI:
             raise IOError("{} does not exist".format(device))
 
         self.handle = os.open(device, os.O_RDWR)
+
+        self.chunk_size = SPI_DEFAULT_CHUNK_SIZE
+        if environ.get("SPI_BUFSIZE") is not None:
+            try:
+                self.chunk_size = int(os.environ.get("SPI_BUFSIZE"))
+            except ValueError:
+                self.chunk_size = SPI_DEFAULT_CHUNK_SIZE
 
         if max_speed_hz is not None:
             self.max_speed_hz = max_speed_hz
@@ -351,7 +360,7 @@ class SPI:
         data = array.array("B", data).tostring()
         # length = len(data)
         chunks = [
-            data[i : i + SPI_CHUNK_SIZE] for i in range(0, len(data), SPI_CHUNK_SIZE)
+            data[i : i + self.chunk_size] for i in range(0, len(data), self.chunk_size)
         ]
         for chunk in chunks:
             length = len(chunk)
@@ -371,10 +380,10 @@ class SPI:
             )
             try:
                 ioctl(self.handle, SPI._IOC_MESSAGE, spi_ioc_transfer)
-            except TimeoutError:
+            except TimeoutError as e:
                 raise Exception(
                     "ioctl timeout. Please try a different SPI frequency or less data."
-                )
+                ) from e
 
     def readbytes(self, length, max_speed_hz=0, bits_per_word=0, delay=0):
         """Perform half-duplex SPI read as a binary string
@@ -403,7 +412,7 @@ class SPI:
         receive_data = []
 
         chunks = [
-            data[i : i + SPI_CHUNK_SIZE] for i in range(0, len(data), SPI_CHUNK_SIZE)
+            data[i : i + self.chunk_size] for i in range(0, len(data), self.chunk_size)
         ]
         for chunk in chunks:
             length = len(chunk)
