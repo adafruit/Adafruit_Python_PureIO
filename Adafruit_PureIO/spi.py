@@ -357,7 +357,7 @@ class SPI:
     def writebytes(self, data, max_speed_hz=0, bits_per_word=0, delay=0):
         """Perform half-duplex SPI write.
         """
-        data = array.array("B", data).tostring()
+        data = array.array("B", data).tobytes()
         # length = len(data)
         chunks = [
             data[i : i + self.chunk_size] for i in range(0, len(data), self.chunk_size)
@@ -408,7 +408,7 @@ class SPI:
     def transfer(self, data, max_speed_hz=0, bits_per_word=0, delay=0):
         """Perform full-duplex SPI transfer
         """
-        data = array.array("B", data).tostring()
+        data = array.array("B", data).tobytes()
         receive_data = []
 
         chunks = [
