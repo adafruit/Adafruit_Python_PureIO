@@ -147,7 +147,9 @@ class SMBus:
             self.close()
         # Try to open the file for the specified bus.  Must turn off buffering
         # or else Python 3 fails (see: https://bugs.python.org/issue20074)
+        #pylint: disable=consider-using-with
         self._device = open("/dev/i2c-{0}".format(bus), "r+b", buffering=0)
+        #pylint: enable=consider-using-with
         # TODO: Catch IOError and throw a better error message that describes
         # what's wrong (i.e. I2C may not be enabled or the bus doesn't exist).
 
