@@ -147,9 +147,9 @@ class SMBus:
             self.close()
         # Try to open the file for the specified bus.  Must turn off buffering
         # or else Python 3 fails (see: https://bugs.python.org/issue20074)
-        #pylint: disable=consider-using-with
+        # pylint: disable=consider-using-with
         self._device = open("/dev/i2c-{0}".format(bus), "r+b", buffering=0)
-        #pylint: enable=consider-using-with
+        # pylint: enable=consider-using-with
         # TODO: Catch IOError and throw a better error message that describes
         # what's wrong (i.e. I2C may not be enabled or the bus doesn't exist).
 
@@ -287,7 +287,11 @@ class SMBus:
             self._device is not None
         ), "Bus must be opened before operations are made against it!"
         # Build ioctl request.
-        request = make_i2c_rdwr_data([(addr, 0, 0, None),])  # Write with no data.
+        request = make_i2c_rdwr_data(
+            [
+                (addr, 0, 0, None),
+            ]
+        )  # Write with no data.
         # Make ioctl call and return result data.
         ioctl(self._device.fileno(), I2C_RDWR, request)
 
@@ -310,8 +314,7 @@ class SMBus:
         self._device.write(buf)
 
     def write_byte_data(self, addr, cmd, val):
-        """Write a byte of data to the specified cmd register of the device.
-        """
+        """Write a byte of data to the specified cmd register of the device."""
         assert (
             self._device is not None
         ), "Bus must be opened before operations are made against it!"
@@ -351,8 +354,7 @@ class SMBus:
         self.write_i2c_block_data(addr, cmd, data)
 
     def write_i2c_block_data(self, addr, cmd, vals):
-        """Write a buffer of data to the specified cmd register of the device.
-        """
+        """Write a buffer of data to the specified cmd register of the device."""
         assert (
             self._device is not None
         ), "Bus must be opened before operations are made against it!"
