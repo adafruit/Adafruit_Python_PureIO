@@ -225,13 +225,11 @@ class SPI:
         return None
 
     def _get_mode_field(self, field):
-        """Helper function to get specific spidev mode bits
-        """
+        """Helper function to get specific spidev mode bits"""
         return bool(self._ioctl(SPI._IOC_RD_MODE) & field)
 
     def _set_mode_field(self, field, value):
-        """Helper function to set a spidev mode bit
-        """
+        """Helper function to set a spidev mode bit"""
         mode = self._ioctl(SPI._IOC_RD_MODE)
         if value:
             mode |= field
@@ -241,8 +239,7 @@ class SPI:
 
     @property
     def phase(self):
-        """SPI clock phase bit
-        """
+        """SPI clock phase bit"""
         return self._get_mode_field(SPI_CPHA)
 
     @phase.setter
@@ -251,8 +248,7 @@ class SPI:
 
     @property
     def polarity(self):
-        """SPI polarity bit
-        """
+        """SPI polarity bit"""
         return self._get_mode_field(SPI_CPOL)
 
     @polarity.setter
@@ -261,8 +257,7 @@ class SPI:
 
     @property
     def cs_high(self):
-        """SPI chip select active level
-        """
+        """SPI chip select active level"""
         return self._get_mode_field(SPI_CS_HIGH)
 
     @cs_high.setter
@@ -271,8 +266,7 @@ class SPI:
 
     @property
     def lsb_first(self):
-        """Bit order of SPI word transfers
-        """
+        """Bit order of SPI word transfers"""
         return self._get_mode_field(SPI_LSB_FIRST)
 
     @lsb_first.setter
@@ -281,8 +275,7 @@ class SPI:
 
     @property
     def three_wire(self):
-        """SPI 3-wire mode
-        """
+        """SPI 3-wire mode"""
         return self._get_mode_field(SPI_THREE_WIRE)
 
     @three_wire.setter
@@ -291,8 +284,7 @@ class SPI:
 
     @property
     def loop(self):
-        """SPI loopback mode
-        """
+        """SPI loopback mode"""
         return self._get_mode_field(SPI_LOOP)
 
     @loop.setter
@@ -301,8 +293,7 @@ class SPI:
 
     @property
     def no_cs(self):
-        """No chipselect. Single device on bus.
-        """
+        """No chipselect. Single device on bus."""
         return self._get_mode_field(SPI_NO_CS)
 
     @no_cs.setter
@@ -311,8 +302,7 @@ class SPI:
 
     @property
     def ready(self):
-        """Slave pulls low to pause
-        """
+        """Slave pulls low to pause"""
         return self._get_mode_field(SPI_READY)
 
     @ready.setter
@@ -346,8 +336,7 @@ class SPI:
 
     @property
     def mode(self):
-        """Mode that SPI is currently running in
-        """
+        """Mode that SPI is currently running in"""
         return self._ioctl(SPI._IOC_RD_MODE)
 
     @mode.setter
@@ -355,8 +344,7 @@ class SPI:
         self._ioctl(SPI._IOC_WR_MODE, mode)
 
     def writebytes(self, data, max_speed_hz=0, bits_per_word=0, delay=0):
-        """Perform half-duplex SPI write.
-        """
+        """Perform half-duplex SPI write."""
         data = array.array("B", data).tobytes()
         # length = len(data)
         chunks = [
@@ -386,8 +374,7 @@ class SPI:
                 ) from e
 
     def readbytes(self, length, max_speed_hz=0, bits_per_word=0, delay=0):
-        """Perform half-duplex SPI read as a binary string
-        """
+        """Perform half-duplex SPI read as a binary string"""
         receive_buffer = create_string_buffer(length)
         spi_ioc_transfer = struct.pack(
             SPI._IOC_TRANSFER_FORMAT,
@@ -406,8 +393,7 @@ class SPI:
         return string_at(receive_buffer, length)
 
     def transfer(self, data, max_speed_hz=0, bits_per_word=0, delay=0):
-        """Perform full-duplex SPI transfer
-        """
+        """Perform full-duplex SPI transfer"""
         data = array.array("B", data).tobytes()
         receive_data = []
 
