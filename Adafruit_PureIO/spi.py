@@ -161,10 +161,10 @@ class SPI:
         """
         if isinstance(device, tuple):
             (bus, dev) = device
-            device = "/dev/spidev{:d}.{:d}".format(bus, dev)
+            device = f"/dev/spidev{bus:d}.{dev:d}"
 
         if not os.path.exists(device):
-            raise IOError("{} does not exist".format(device))
+            raise IOError(f"{device} does not exist")
 
         self.handle = os.open(device, os.O_RDWR)
 
