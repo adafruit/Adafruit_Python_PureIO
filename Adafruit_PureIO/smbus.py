@@ -110,6 +110,7 @@ def make_i2c_rdwr_data(messages):
     data.nmsgs = len(messages)
     return data
 
+
 # pylint: enable=attribute-defined-outside-init
 
 
