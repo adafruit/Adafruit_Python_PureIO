@@ -368,10 +368,10 @@ class SPI:
             )
             try:
                 ioctl(self.handle, SPI._IOC_MESSAGE, spi_ioc_transfer)
-            except TimeoutError as e:
-                raise Exception(
+            except TimeoutError as err:
+                raise Exception(  # pylint: disable=broad-exception-raised
                     "ioctl timeout. Please try a different SPI frequency or less data."
-                ) from e
+                ) from err
 
     def readbytes(self, length, max_speed_hz=0, bits_per_word=0, delay=0):
         """Perform half-duplex SPI read as a binary string"""
