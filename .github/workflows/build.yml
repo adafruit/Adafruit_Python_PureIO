@@ -6,26 +6,22 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - name: Dump GitHub context
-      env:
-        GITHUB_CONTEXT: ${{ toJson(github) }}
-      run: echo "$GITHUB_CONTEXT"
     - name: Translate Repo Name For Build Tools filename_prefix
       id: repo-name
-      run: echo ::set-output name=repo-name::Adafruit-PureIO
-    - name: Set up Python 3.6
-      uses: actions/setup-python@v1
+      run: echo "repo-name=Adafruit-PureIO" >> $GITHUB_OUTPUT
+    - name: Set up Python 3.x
+      uses: actions/setup-python@v4
       with:
-        python-version: 3.6
+        python-version: '3.x'
     - name: Versions
       run: |
         python3 --version
     - name: Checkout Current Repo
-      uses: actions/checkout@v1
+      uses: actions/checkout@v3
       with:
         submodules: true
     - name: Checkout tools repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         repository: adafruit/actions-ci-circuitpython-libs
         path: actions-ci
