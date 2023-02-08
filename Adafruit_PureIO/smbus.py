@@ -43,6 +43,8 @@ from ctypes import create_string_buffer, Structure
 from fcntl import ioctl
 import struct
 
+# pylint: disable=fixme
+
 # I2C C API constants (from linux kernel headers)
 I2C_M_TEN = 0x0010  # this is a ten bit chip address
 I2C_M_RD = 0x0001  # read data, from slave to master
@@ -86,6 +88,7 @@ class i2c_rdwr_ioctl_data(Structure):  # pylint: disable=invalid-name
 # pylint: enable=invalid-name,too-few-public-methods
 
 
+# pylint: disable=attribute-defined-outside-init
 def make_i2c_rdwr_data(messages):
     """Utility function to create and return an i2c_rdwr_ioctl_data structure
     populated with a list of specified I2C messages.  The messages parameter
@@ -106,6 +109,9 @@ def make_i2c_rdwr_data(messages):
     data.msgs = msg_data
     data.nmsgs = len(messages)
     return data
+
+
+# pylint: enable=attribute-defined-outside-init
 
 
 # Create an interface that mimics the Python SMBus API.
