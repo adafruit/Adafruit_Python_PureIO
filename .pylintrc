@@ -1,13 +1,13 @@
+# SPDX-FileCopyrightText: 2020 Melissa LeBlanc-Williams for Adafruit Industries
+#
+# SPDX-License-Identifier: MIT
+
 [MAIN]
 
 # Analyse import fallback blocks. This can be used to support both Python 2 and
 # 3 compatible code, which means that the block might have code that exists
 # only in one or another interpreter, leading to false positives when analysed.
 analyse-fallback-blocks=no
-
-# Clear in-memory caches upon conclusion of linting. Useful if running pylint
-# in a server-like mode.
-clear-cache-post-run=no
 
 # Load and enable all available extensions. Use --list-extensions to see a list
 # all available extensions.
@@ -50,8 +50,8 @@ ignore=CVS
 
 # Add files or directories matching the regular expressions patterns to the
 # ignore-list. The regex matches against paths and can be in Posix or Windows
-# format. Because '\\' represents the directory delimiter on Windows systems,
-# it can't be used as an escape character.
+# format. Because '\' represents the directory delimiter on Windows systems, it
+# can't be used as an escape character.
 ignore-paths=
 
 # Files or directories matching the regular expression patterns are skipped.
@@ -264,7 +264,7 @@ exclude-protected=_asdict,
 valid-classmethod-first-arg=cls
 
 # List of valid names for the first argument in a metaclass class method.
-valid-metaclass-classmethod-first-arg=mcs
+valid-metaclass-classmethod-first-arg=cls
 
 
 [DESIGN]
@@ -311,7 +311,8 @@ min-public-methods=2
 [EXCEPTIONS]
 
 # Exceptions that will emit a warning when caught.
-overgeneral-exceptions=builtins.BaseException,builtins.Exception
+overgeneral-exceptions=BaseException,
+                       Exception
 
 
 [FORMAT]
@@ -349,9 +350,6 @@ single-line-if-stmt=no
 # List of modules that can be imported at any level, not just the top level
 # one.
 allow-any-import-level=
-
-# Allow explicit reexports by alias from a package __init__.
-allow-reexport-from-package=no
 
 # Allow wildcard imports from modules that define __all__.
 allow-wildcard-with-all=no
@@ -422,7 +420,8 @@ disable=raw-checker-failed,
         useless-suppression,
         deprecated-pragma,
         use-symbolic-message-instead,
-        invalid-name
+        invalid-name,
+        import-error
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
