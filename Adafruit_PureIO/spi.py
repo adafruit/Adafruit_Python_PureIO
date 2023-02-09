@@ -47,7 +47,7 @@ import os.path
 from os import environ
 import array
 
-__version__ = "0.0.0-auto.0"
+__version__ = "0.0.0+auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_Python_PureIO.git"
 
 # SPI C API constants (from linux kernel headers)
