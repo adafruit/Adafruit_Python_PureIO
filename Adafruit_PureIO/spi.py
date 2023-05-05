@@ -7,9 +7,9 @@
 ================================================================================
 
 Pure python (i.e. no native extensions) access to Linux IO SPI interface that is
-similar to the SpiDev API.
+similar to the SpiDev API. Based heavily on https://github.com/tomstokes/python-spi/.
 
-* Author(s): Melissa LeBlanc-Williams
+* Author(s): Tom Stokes, Melissa LeBlanc-Williams
 
 Implementation Notes
 --------------------
