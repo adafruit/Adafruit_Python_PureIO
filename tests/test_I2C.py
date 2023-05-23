@@ -1,9 +1,14 @@
+# SPDX-FileCopyrightText: 2020 Melissa LeBlanc-Williams for Adafruit Industries
+#
+# SPDX-License-Identifier: MIT
+
+
 # Basic smbus test.  This is pretty ugly and meant to be run against a ADS1x15
 # and some output inspected by a Saleae logic analyzer.  TODO: Refactor into
 # something that can test without hardware?
 import binascii
 
-import Adafruit_PureIO.smbus as smbus
+from Adafruit_PureIO import smbus
 
 
 DEVICE_ADDR = 0x48

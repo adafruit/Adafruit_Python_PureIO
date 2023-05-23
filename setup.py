@@ -1,4 +1,9 @@
-"""A setuptools based setup module.
+# SPDX-FileCopyrightText: 2020 Melissa LeBlanc-Williams for Adafruit Industries
+#
+# SPDX-License-Identifier: MIT
+
+"""
+A setuptools based setup module.
 
 See:
 https://packaging.python.org/en/latest/distributing.html

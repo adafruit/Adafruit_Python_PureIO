@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2021 Adafruit Industries
+
+SPDX-License-Identifier: MIT
+-->
+
 Thank you for creating a pull request to contribute to Adafruit's GitHub code!
 Before you open the request please review the following guidelines and tips to
 help it be more easily integrated:
