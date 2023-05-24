@@ -1,0 +1,3 @@
+# SPDX-FileCopyrightText: 2023 Alec Delaney, for Adafruit Industries
+#
+# SPDX-License-Identifier: MIT

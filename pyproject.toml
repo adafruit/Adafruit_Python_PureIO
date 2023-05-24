@@ -1,0 +1,52 @@
+# SPDX-FileCopyrightText: 2023 Alec Delaney for Adafruit Industries
+#
+# SPDX-License-Identifier: MIT
+
+[build-system]
+requires = [
+    "setuptools",
+    "wheel",
+    "setuptools-scm",
+]
+
+[project]
+name = "Adafruit_PureIO"
+description = "Pure python (i.e. no native extensions) access to Linux IO    including I2C and SPI. Drop in replacement for smbus and spidev modules."
+version = "0.0.0+auto.0"
+readme = "README.rst"
+authors = [
+    {name = "Adafruit Industries", email = "circuitpython@adafruit.com"}
+]
+urls = {Homepage = "https://github.com/adafruit/Adafruit_Python_PureIO"}
+keywords = [
+    "adafruit",
+    "blinka",
+    "micropython",
+    "pureio",
+    "ioctl",
+    "spi",
+    "i2c",
+    "python",
+]
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: System :: Hardware",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.4",
+    "Programming Language :: Python :: 3.5",
+    "Programming Language :: Python :: Implementation :: CPython",
+]
+requires-python = ">=3.5.0"
+dynamic = ["dependencies", "optional-dependencies"]
+
+[tool.setuptools]
+packages = ["Adafruit_PureIO"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+optional-dependencies = {optional = {file = ["optional_requirements.txt"]}}
