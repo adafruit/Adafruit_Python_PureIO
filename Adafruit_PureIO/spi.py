@@ -122,7 +122,7 @@ class SPI:
 
     _IOC_RD_MODE32 = _ioc_encode(_IOC_READ, 5, "I")
     _IOC_WR_MODE32 = _ioc_encode(_IOC_WRITE, 5, "I")
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
 
     def __init__(
         self,
