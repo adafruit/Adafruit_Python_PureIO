@@ -24,6 +24,8 @@ Implementation Notes
 from ctypes import c_uint8, c_uint16, c_uint32, cast, pointer, POINTER
 from ctypes import create_string_buffer, Structure
 from fcntl import ioctl
+import errno
+import os
 import struct
 
 # pylint: disable=fixme
@@ -153,13 +155,27 @@ class SMBus:
         """Set the address of the device to communicate with on the I2C bus."""
         ioctl(self._device.fileno(), I2C_SLAVE, addr & 0x7F)
 
+    # The device is an unbuffered file, whose read() and write() return None
+    # instead of raising when the driver reports EAGAIN (for example a lost
+    # arbitration, or a bus error on a bus without pull-ups): raise it, as
+    # the ioctl based calls do.
+    def _read(self, length):
+        data = self._device.read(length)
+        if data is None:
+            raise BlockingIOError(errno.EAGAIN, os.strerror(errno.EAGAIN))
+        return data
+
+    def _write(self, data):
+        if self._device.write(data) is None:
+            raise BlockingIOError(errno.EAGAIN, os.strerror(errno.EAGAIN))
+
     def read_byte(self, addr):
         """Read a single byte from the specified device."""
         assert (
             self._device is not None
         ), "Bus must be opened before operations are made against it!"
         self._select_device(addr)
-        return ord(self._device.read(1))
+        return ord(self._read(1))
 
     def read_bytes(self, addr, number):
         """Read many bytes from the specified device."""
@@ -167,7 +183,7 @@ class SMBus:
             self._device is not None
         ), "Bus must be opened before operations are made against it!"
         self._select_device(addr)
-        return self._device.read(number)
+        return self._read(number)
 
     def read_byte_data(self, addr, cmd):
         """Read a single byte from the specified cmd register of the device."""
@@ -292,7 +308,7 @@ class SMBus:
         self._select_device(addr)
         data = bytearray(1)
         data[0] = val & 0xFF
-        self._device.write(data)
+        self._write(data)
 
     def write_bytes(self, addr, buf):
         """Write many bytes to the specified device. buf is a bytearray"""
@@ -300,7 +316,7 @@ class SMBus:
             self._device is not None
         ), "Bus must be opened before operations are made against it!"
         self._select_device(addr)
-        self._device.write(buf)
+        self._write(buf)
 
     def write_byte_data(self, addr, cmd, val):
         """Write a byte of data to the specified cmd register of the device."""
@@ -313,7 +329,7 @@ class SMBus:
         data[1] = val & 0xFF
         # Send the data to the device.
         self._select_device(addr)
-        self._device.write(data)
+        self._write(data)
 
     def write_word_data(self, addr, cmd, val):
         """Write a word (2 bytes) of data to the specified cmd register of the
@@ -327,7 +343,7 @@ class SMBus:
         data = struct.pack("=BH", cmd & 0xFF, val & 0xFFFF)
         # Send the data to the device.
         self._select_device(addr)
-        self._device.write(data)
+        self._write(data)
 
     def write_block_data(self, addr, cmd, vals):
         """Write a block of data to the specified cmd register of the device.
@@ -354,7 +370,7 @@ class SMBus:
         # the entire write happens in one transaction).
         # Send the data to the device.
         self._select_device(addr)
-        self._device.write(data)
+        self._write(data)
 
     def process_call(self, addr, cmd, val):
         """Perform a smbus process call by writing a word (2 byte) value to
